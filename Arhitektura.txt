@@ -1,0 +1,63 @@
+📖 1. Ulazna slika
+Code
+slika (3, 518, 518)
+To je tvoj ulazni tenzor: RGB slika sa 3 kanala, visine i širine 518.
+
+Prethodno smo je normalizovali i pripremili u dataset klasi.
+
+📖 2. DINOv2 backbone (zamrznut)
+Code
+▼  DINOv2 backbone (ZAMRZNUT)
+patch tokeni (1369, 384)
+Backbone = glavni deo modela koji pretvara sliku u reprezentaciju.
+
+Zamrznut znači da se njegove težine ne menjaju tokom treninga (gradijenti se ne računaju). Koristiš ga kao "feature extractor".
+
+Patch tokeni:
+
+Slika se deli na male kvadratiće (patches).
+
+Za 518×518 sliku i patch veličinu 14, dobiješ 37×37 = 1369 kvadratića.
+
+Svaki patch se enkodira u vektor dužine 384 (opis tog kvadratića).
+
+Rezultat: matrica oblika (1369, 384).
+
+📖 3. Reshape u 2D "tablu"
+Code
+reshape: spljošten niz -> 2D "tabla"
+(384, 37, 37)
+Umesto da imaš listu od 1369 vektora, preoblikuješ ih u 2D raspored (37×37).
+
+Svaki patch sada stoji na svom mestu u "tabli".
+
+Dobiješ tenzor oblika (384, 37, 37): kao da imaš malu sliku sa 384 kanala.
+
+📖 4. 1×1 konvolucija (head)
+Code
+1×1 konvolucija (NAŠ trenabilni head)
+(1, 37, 37)
+Dodaješ sopstveni "head" — malu mrežu koja se trenira.
+
+1×1 konvolucija znači da se svaki patch vektor (384 vrednosti) mapira u jedan broj.
+
+Rezultat: (1, 37, 37) → za svaki patch dobiješ procenu: "koliko liči na masu".
+
+📖 5. Upsample nazad na punu rezoluciju
+Code
+upsample (bilinear) nazad na punu rezoluciju
+(1, 518, 518)
+Pošto maska mora da bude iste veličine kao originalna slika, radiš bilinear upsampling sa 37×37 na 518×518.
+
+Rezultat: mapa verovatnoća (1 kanal, 518×518).
+
+Možeš direktno da porediš sa pravom maskom (koja je isto 518×518).
+
+✅ Ukratko
+Patch = mali kvadratić slike (npr. 14×14 piksela).
+
+Backbone (zamrznut) = DINOv2 koji pretvara sliku u patch tokene, ali se ne trenira.
+
+Head (treniramo) = mala mreža koja uči da prepozna mase iz patch tokena.
+
+Upsample = vraća rezultat na originalnu rezoluciju da bi se poredio sa maskom.

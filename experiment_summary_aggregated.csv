@@ -1,0 +1,3 @@
+experiment,mean_val_dice,std_val_dice,n_seeds
+faza1_baseline,0.4994979699452718,0.013745553862589242,3
+faza5_augmentacija,0.5168786346912384,0.004687113366876979,3
