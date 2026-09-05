@@ -39,8 +39,10 @@ SEEDS = [123, 456, 789]  # fiksiran, ponovljiv skup - isti seed-ovi za SVAKU
 # (rezultati: 0.4995 +/- 0.0137 i 0.5169 +/- 0.0047), ne ponavljamo ih ovde
 # da ne trosimo vreme. Sada testiramo fine-tuning, PREKO vec potvrdjene
 # augmentacije (augment=True je "usvojena" osnova od sada nadalje).
+
 CONFIGS = [
-    {"experiment_name": "faza5_finetune_2blocks", "augment": True, "n_unfrozen_blocks": 2},
+    # {"experiment_name": "faza5_finetune_2blocks", "augment": True, "n_unfrozen_blocks": 2},   #Stara
+    {"experiment_name": "faza5_finetune_4blocks", "augment": True, "n_unfrozen_blocks": 4},     #Nova
 ]
 
 
