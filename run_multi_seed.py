@@ -35,18 +35,25 @@ SEEDS = [123, 456, 789]  # fiksiran, ponovljiv skup - isti seed-ovi za SVAKU
                            # konfiguraciju, da poredjenje bude "parno"
                            # (baseline sa seed=123 vs. augmentacija sa seed=123, itd.)
 
-# Konfiguracije za OVO pokretanje - baseline i augmentacija su vec zavrseni
-# (rezultati: 0.4995 +/- 0.0137 i 0.5169 +/- 0.0047), ne ponavljamo ih ovde
-# da ne trosimo vreme. Sada testiramo fine-tuning, PREKO vec potvrdjene
-# augmentacije (augment=True je "usvojena" osnova od sada nadalje).
-
+# Konfiguracije za OVO pokretanje - baseline, augmentacija, N=2 i N=4 su
+# vec zavrseni (0.4995, 0.5169, 0.5532, 0.5768) - ne ponavljamo ih ovde.
+# N=4 je NASTAVIO da poboljsava rezultat (suprotno hipotezi da bi opao) -
+# probamo JOS JEDNU tacku, N=6, da vidimo da li trend i dalje raste ili
+# konacno staje/opada.
 CONFIGS = [
-    # {"experiment_name": "faza5_finetune_2blocks", "augment": True, "n_unfrozen_blocks": 2},   #Stara
-    {"experiment_name": "faza5_finetune_4blocks", "augment": True, "n_unfrozen_blocks": 4},     #Nova
+    {"experiment_name": "faza5_finetune_6blocks", "augment": True, "n_unfrozen_blocks": 6},
 ]
 
 
 def main():
+    # Ime sumarnih fajlova IZVODIMO automatski iz CONFIGS (spoj imena svih
+    # eksperimenata u ovom pokretanju) - umesto da nam treba JOS JEDNA
+    # promenljiva koju bismo mogli da zaboravimo da promenimo (isti obrazac
+    # greske koji smo vec nekoliko puta ponovili sa EXPERIMENT_NAME).
+    batch_id = "_".join(cfg["experiment_name"] for cfg in CONFIGS)
+    raw_path = f"summary_raw__{batch_id}.csv"
+    aggregated_path = f"summary_aggregated__{batch_id}.csv"
+
     all_results = []
 
     for cfg in CONFIGS:
@@ -56,7 +63,7 @@ def main():
 
     # Sirovi rezultati - SVAKO pojedinacno pokretanje, da vidis i samu
     # varijansu, ne samo prosek (korisno za "Rezultati i diskusija").
-    with open("experiment_summary_raw.csv", "w", newline="") as f:
+    with open(raw_path, "w", newline="") as f:
         fieldnames = ["experiment", "seed", "augment", "n_unfrozen_blocks",
                       "best_val_dice", "best_val_iou", "best_epoch"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -86,12 +93,12 @@ def main():
             "n_seeds": len(dices),
         })
 
-    with open("experiment_summary_aggregated.csv", "w", newline="") as f:
+    with open(aggregated_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["experiment", "mean_val_dice", "std_val_dice", "n_seeds"])
         writer.writeheader()
         writer.writerows(summary_rows)
 
-    print("\nSacuvano: experiment_summary_raw.csv i experiment_summary_aggregated.csv")
+    print(f"\nSacuvano: {raw_path} i {aggregated_path}")
 
 
 if __name__ == "__main__":
