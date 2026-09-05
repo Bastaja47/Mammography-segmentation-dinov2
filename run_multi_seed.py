@@ -35,10 +35,12 @@ SEEDS = [123, 456, 789]  # fiksiran, ponovljiv skup - isti seed-ovi za SVAKU
                            # konfiguraciju, da poredjenje bude "parno"
                            # (baseline sa seed=123 vs. augmentacija sa seed=123, itd.)
 
-# Konfiguracije koje poredimo - svaka ce biti trenirana 3x (jednom po seed-u)
+# Konfiguracije za OVO pokretanje - baseline i augmentacija su vec zavrseni
+# (rezultati: 0.4995 +/- 0.0137 i 0.5169 +/- 0.0047), ne ponavljamo ih ovde
+# da ne trosimo vreme. Sada testiramo fine-tuning, PREKO vec potvrdjene
+# augmentacije (augment=True je "usvojena" osnova od sada nadalje).
 CONFIGS = [
-    {"experiment_name": "faza1_baseline", "augment": False},
-    {"experiment_name": "faza5_augmentacija", "augment": True},
+    {"experiment_name": "faza5_finetune_2blocks", "augment": True, "n_unfrozen_blocks": 2},
 ]
 
 
@@ -53,7 +55,8 @@ def main():
     # Sirovi rezultati - SVAKO pojedinacno pokretanje, da vidis i samu
     # varijansu, ne samo prosek (korisno za "Rezultati i diskusija").
     with open("experiment_summary_raw.csv", "w", newline="") as f:
-        fieldnames = ["experiment", "seed", "augment", "best_val_dice", "best_val_iou", "best_epoch"]
+        fieldnames = ["experiment", "seed", "augment", "n_unfrozen_blocks",
+                      "best_val_dice", "best_val_iou", "best_epoch"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for r in all_results:
