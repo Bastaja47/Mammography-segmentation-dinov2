@@ -38,21 +38,21 @@ class BCEDiceLoss(nn.Module):
     segmentaciji (npr. podrazumevani izbor u nnU-Net okviru).
     """
 
-    def __init__(self, bce_weight=0.5):  #bce 0.5 znaci da je BCE i Dice jednako vazan, moze se podesiti(da je 1 bilo bi samo bce da je 0 samo dice)
-        super().__init__() #obavezan korak kad se koristi nn.Module, poziva se konstruktor roditelja
+    def __init__(self, bce_weight=0.5):
+        super().__init__()
         self.bce_weight = bce_weight
-        self.bce = nn.BCEWithLogitsLoss() #Obezbedjuje da se vracaju logiti(sirovi brojevi)
+        self.bce = nn.BCEWithLogitsLoss()
         # BCEWithLogitsLoss ocekuje SIROVE logite (ne sigmoid) - primenjuje
         # sigmoid interno, numericki stabilnije nego rucni sigmoid()+BCELoss.
 
-    def forward(self, logits, targets):  #klasa koja nasledjuje nn.Module mora da implementira forward metodu, koja definise kako se ulazni podaci prolaze kroz mrezu i kako se dobija izlaz
+    def forward(self, logits, targets):
         bce_loss = self.bce(logits, targets)
 
         probs = torch.sigmoid(logits)  # logiti -> verovatnoce [0,1]
         dice_loss = 1.0 - soft_dice_score(probs, targets)
         # Dice SCORE: "vise je bolje" (1 = savrseno poklapanje).
         # LOSS mora biti "manje je bolje" (mreza minimizuje) -> 1 - dice.
-        #logits su sirovi brojevi izlaz modela, a targets su binarne maske (0 ili 1)
+
         return self.bce_weight * bce_loss + (1 - self.bce_weight) * dice_loss
 
 
@@ -106,3 +106,45 @@ def hard_iou_score(logits, targets, threshold=0.5, eps=1e-6):
 
     iou = (intersection + eps) / (union + eps)
     return iou.mean().item()
+
+
+@torch.no_grad()
+def hard_sensitivity_score(logits, targets, threshold=0.5, eps=1e-6):
+    """Sensitivity (Recall) = TP / (TP + FN).
+
+    Klinicko znacenje: od svih piksela koji SU stvarno masa, koliki
+    procenat je model pronasao. Visok sensitivity = model retko
+    PROPUSTA masu - u medicini ovo je obicno vaznije od precision-a,
+    jer je propustena masa (lazno negativno) ozbiljnija greska.
+    """
+    probs = torch.sigmoid(logits)
+    preds = (probs > threshold).float()
+
+    preds = preds.reshape(preds.shape[0], -1)
+    targets = targets.reshape(targets.shape[0], -1)
+
+    tp = (preds * targets).sum(dim=1)
+    fn = ((1 - preds) * targets).sum(dim=1)
+
+    sensitivity = (tp + eps) / (tp + fn + eps)
+    return sensitivity.mean().item()
+
+
+@torch.no_grad()
+def hard_precision_score(logits, targets, threshold=0.5, eps=1e-6):
+    """Precision = TP / (TP + FP).
+
+    Klinicko znacenje: od svega sto je model OZNACIO kao masu, koliki
+    procenat je zaista bio tacan pogodak (ne lazni alarm na zdravom tkivu).
+    """
+    probs = torch.sigmoid(logits)
+    preds = (probs > threshold).float()
+
+    preds = preds.reshape(preds.shape[0], -1)
+    targets = targets.reshape(targets.shape[0], -1)
+
+    tp = (preds * targets).sum(dim=1)
+    fp = (preds * (1 - targets)).sum(dim=1)
+
+    precision = (tp + eps) / (tp + fp + eps)
+    return precision.mean().item()
