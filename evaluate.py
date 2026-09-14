@@ -1,12 +1,3 @@
-"""
-evaluate.py
-
-finalna evaluacija - test skup se dodiruje ovde, prvi i jedini put u
-celom projektu. Evaluiramo pobednicku konfiguraciju iz Faze 5
-(fine-tuning N=6 blokova + augmentacija) - sva tri vec istrenirana
-modela (razliciti seed), izvestavamo prosek +- std.
-
-"""
 
 import csv
 
@@ -20,10 +11,9 @@ from losses import hard_dice_score, hard_iou_score, hard_sensitivity_score, hard
 
 SPLIT_JSON = "inbreast_split.json"
 BACKBONE_NAME = "dinov2_vits14"
-N_UNFROZEN_BLOCKS = 6  # POBEDNICKA konfiguracija iz Faze 5 (0.6709 +/- 0.0151 na validaciji)
+N_UNFROZEN_BLOCKS = 6
 SEEDS = [123, 456, 789]
 CHECKPOINT_TEMPLATE = "faza5_finetune_6blocks_seed{seed}_model.pt"
-
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -32,12 +22,6 @@ def main():
     test_ds = InbreastMassDataset(SPLIT_JSON, "test")
     print(f"Test skup: {len(test_ds)} slika")
 
-    # BATCH_SIZE (64) veci od celog test skupa (17 slika) - SVE test
-    # slike idu u JEDAN batch. Zasto: ako bismo ih delili u vise
-    # batch-eva razlicite velicine (npr. 8+8+1), prosek "po batch-u"
-    # preko sva tri batch-a NE bi bio isto sto i pravi prosek preko svih
-    # 17 pojedinacnih slika - batch od samo 1 slike bi "tezio" u finalnom
-    # racunu isto koliko i batch od 8 slika. Jedan batch = tacan prosek.
     test_loader = DataLoader(test_ds, batch_size=64, shuffle=False)
 
     all_results = []
@@ -52,7 +36,7 @@ def main():
         model.to(device)
         model.eval()
 
-        batch = next(iter(test_loader))  # CEO test skup, u jednom batch-u
+        batch = next(iter(test_loader))
         images = batch["image"].to(device)
         masks = batch["mask"].to(device)
 
@@ -85,7 +69,6 @@ def main():
         for r in all_results:
             writer.writerow({k: r[k] for k in fieldnames})
     print("\nSacuvano: final_test_evaluation.csv")
-
 
 if __name__ == "__main__":
     main()

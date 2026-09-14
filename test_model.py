@@ -1,11 +1,3 @@
-"""
-test_model.py
-
-Proverava da DinoSegmentationModel ispravno radi na pravim podacima iz naseg
-Dataset-a (ne izmisljenom tenzoru), PRE nego sto pisemo trening petlju
-Ne racunamo jos loss - samo proveravamo da se oblici (shapes) poklapaju
-i da nam parametri izgledaju kako ocekujemo (mali broj trenabilnih)
-"""
 
 import torch
 from torch.utils.data import DataLoader
@@ -15,22 +7,17 @@ from model import DinoSegmentationModel
 
 SPLIT_JSON = "inbreast_split.json"
 
-
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Koristim uredjaj: {device}")
 
     train_ds = InbreastMassDataset(SPLIT_JSON, "train")
-    # mali batch_size=2 - ovo je SAMO test da vidimo da li radi, ne trening;
-    # pravi batch_size za trening biramo u sledecem koraku, uz obzir na
-    # 6GB VRAM ogranicenje
     loader = DataLoader(train_ds, batch_size=2, shuffle=True)
     batch = next(iter(loader))
 
     model = DinoSegmentationModel(backbone_name="dinov2_vits14", freeze_backbone=True)
     model.to(device)
-    model.train()  # namerno testiramo bas u train() modu - da potvrdimo da
-                    # nas override ispravno drzi backbone u eval()-u
+    model.train()
 
     print("Backbone.training (ocekujemo False):", model.backbone.training)
     print("Head.training (ocekujemo True):     ", model.head.training)
@@ -56,7 +43,6 @@ def main():
     if device == "cuda":
         mem_gb = torch.cuda.max_memory_allocated() / 1e9
         print(f"\nMaksimalno zauzeta GPU memorija u ovom testu: {mem_gb:.2f} GB")
-
 
 if __name__ == "__main__":
     main()

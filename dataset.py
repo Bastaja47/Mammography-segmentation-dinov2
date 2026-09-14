@@ -1,12 +1,3 @@
-"""
-dataset.py
- 
-PyTorch Dataset klasa - cita inbreast_split.json, ucitava DICOM sliku + PNG
-masku, priprema ih za DINOv2. FAZA 5 DODATAK: nasumicna augmentacija za
-train split (flip, rotacija, brightness/contrast) - cilj je da smanjimo
-overfitting koji smo dijagnostikovali u baseline treningu.
-
-"""
  
 import json
 import random
@@ -18,18 +9,13 @@ import torchvision.transforms.functional as TF
 from PIL import Image
 from torch.utils.data import Dataset
  
-IMG_SIZE = 518  # deljivo sa patch_size=14, isto sto DINOv2 koristi pri pretreningu
+IMG_SIZE = 518
  
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
  
- 
 class InbreastMassDataset(Dataset):
     def __init__(self, split_json_path, split_name, img_size=IMG_SIZE, augment=None):
-        """
-        augment=None-> automatski UKLJUCENO za "train",
-        automatski ISKLJUCENO za "val"/"test"
-        """
         with open(split_json_path) as f:
             records = json.load(f)
         self.records = [r for r in records if r["split"] == split_name]
@@ -61,13 +47,10 @@ class InbreastMassDataset(Dataset):
  
     def _augment(self, image_t, mask_t):
         
- 
-        # 1) Horizontalni flip, 50% sanse
         if random.random() < 0.5:
             image_t = TF.hflip(image_t)
             mask_t = TF.hflip(mask_t)
  
-        # 2) Rotacija +-15 stepeni - ISTI ugao za oboje
         angle = random.uniform(-15, 15)
         image_t = TF.rotate(
             image_t, angle, interpolation=TF.InterpolationMode.BILINEAR, fill=0.0
@@ -75,16 +58,10 @@ class InbreastMassDataset(Dataset):
         mask_t = TF.rotate(
             mask_t, angle, interpolation=TF.InterpolationMode.NEAREST, fill=0.0
         )
-        # Fill=0.0 (crno) za praznine koje rotacija otkrije na ivicama -
-        # ispravno i za sliku (pozadina je vec crna/0) i za masku
-        # (praznina = "nije masa" = 0).
  
-        # 3) Brightness/contrast jitter - SAMO slika, posle geometrije
-        gain = random.uniform(0.85, 1.15)   # kontrast
-        bias = random.uniform(-0.1, 0.1)     # svetlina
+        gain = random.uniform(0.85, 1.15)
+        bias = random.uniform(-0.1, 0.1)
         image_t = (image_t * gain + bias).clamp(0.0, 1.0)
-        # clamp() vraca vrednosti nazad u [0,1] ako ih gain/bias izgura
-        # van opsega - normalizacija dole ocekuje validan [0,1] ulaz.
  
         return image_t, mask_t
  

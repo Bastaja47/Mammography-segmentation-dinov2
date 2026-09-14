@@ -1,10 +1,3 @@
-"""
-train.py
-
-Trening logika - prosirena da podrzi delimican fine-tuning backbone-a
-(pored postojece podrske za augmentaciju i multi-seed pozive).
-
-"""
 
 import csv
 import random
@@ -20,11 +13,9 @@ from losses import BCEDiceLoss, hard_dice_score, hard_iou_score
 SPLIT_JSON = "inbreast_split.json"
 BATCH_SIZE = 8
 NUM_EPOCHS = 60
-LR_HEAD = 1e-3          # head - nasumicno inicijalizovan, uci "hrabro"
-LR_BACKBONE = 1e-5      # odmrznuti backbone blokovi - fino podesavanje,
-                          # 100x manji LR da ne unistimo pretrenirano znanje
+LR_HEAD = 1e-3
+LR_BACKBONE = 1e-5
 PATIENCE = 10
-
 
 def run_epoch(model, loader, criterion, optimizer, device, train=True):
     model.train(train)
@@ -53,7 +44,6 @@ def run_epoch(model, loader, criterion, optimizer, device, train=True):
         "iou": total_iou / n_batches,
     }
 
-
 def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
                    backbone_name="dinov2_vits14"):
     random.seed(seed)
@@ -80,12 +70,8 @@ def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
 
     criterion = BCEDiceLoss(bce_weight=0.5)
 
-    # DVE grupe parametara, RAZLICITI learning rate-ovi. Ako je backbone
-    # potpuno zamrznut (n_unfrozen_blocks=0), backbone_params ce biti prazna
-    # lista - optimizator to prihvata bez problema, ta grupa jednostavno
-    # "ne postoji" u praksi.
     head_params = list(model.head.parameters())
-    backbone_params = [p for p in model.backbone.parameters() if p.requires_grad] #Uzima samo odmrznute parametre
+    backbone_params = [p for p in model.backbone.parameters() if p.requires_grad]
 
     param_groups = [{"params": head_params, "lr": LR_HEAD}]
     if len(backbone_params) > 0:
@@ -121,8 +107,6 @@ def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
             best_val_iou = val_stats["iou"]
             best_epoch = epoch
             epochs_without_improvement = 0
-            # CEO model (backbone + head) - vise NE mozemo da pretpostavimo
-            # da je backbone nepromenjen, pa cuvamo sve, ne samo head.
             torch.save(model.state_dict(), checkpoint_path)
         else:
             epochs_without_improvement += 1
@@ -149,8 +133,5 @@ def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
         "checkpoint_path": checkpoint_path,
     }
 
-
 if __name__ == "__main__":
-    # Brz pojedinacni test fine-tuninga (2 odmrznuta bloka) pre nego sto
-    # ovo ubacimo u run_multi_seed.py
     train_one_run(seed=123, experiment_name="quick_test_finetune", augment=True, n_unfrozen_blocks=2)
