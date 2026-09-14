@@ -1,10 +1,10 @@
 """
 test_dataset.py
 
-Proverava da InbreastMassDataset ispravno radi PRE nego sto gradimo trening
+Proverava da InbreastMassDataset ispravno radi pre nego sto gradimo trening
 petlju oko nje. Ucitava par primera, stampa oblike (shapes) tenzora, i
-crta sliku+masku da vizuelno potvrdimo da je sve na svom mestu NAKON
-resize-a i normalizacije (ne samo pre, kao u prethodnoj proveri).
+crta sliku+masku da vizuelno potvrdimo da je sve na svom mestu nakon
+resize-a i normalizacije (ne samo pre, kao u prethodnoj proveri)
 """
 
 import matplotlib.pyplot as plt

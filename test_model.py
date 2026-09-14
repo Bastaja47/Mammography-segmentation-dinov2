@@ -1,10 +1,10 @@
 """
 test_model.py
 
-Proverava da DinoSegmentationModel ispravno radi na PRAVIM podacima iz naseg
-Dataset-a (ne izmisljenom tenzoru), PRE nego sto pisemo trening petlju.
+Proverava da DinoSegmentationModel ispravno radi na pravim podacima iz naseg
+Dataset-a (ne izmisljenom tenzoru), PRE nego sto pisemo trening petlju
 Ne racunamo jos loss - samo proveravamo da se oblici (shapes) poklapaju
-i da nam parametri izgledaju kako ocekujemo (mali broj trenabilnih).
+i da nam parametri izgledaju kako ocekujemo (mali broj trenabilnih)
 """
 
 import torch

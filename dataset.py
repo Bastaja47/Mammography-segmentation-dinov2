@@ -5,18 +5,7 @@ PyTorch Dataset klasa - cita inbreast_split.json, ucitava DICOM sliku + PNG
 masku, priprema ih za DINOv2. FAZA 5 DODATAK: nasumicna augmentacija za
 train split (flip, rotacija, brightness/contrast) - cilj je da smanjimo
 overfitting koji smo dijagnostikovali u baseline treningu.
- 
-=======================================================================
-STA MORAS DA RAZUMES (koncept):
-- Zasto augmentacija ide SAMO na train (nikad val/test)
-- Zasto ISTI nasumicni parametri (ugao rotacije, da li je flip) MORAJU
-  da se primene i na sliku i na masku - inace se raspadne poklapanje
-- Redosled: geometrijske transformacije PRE normalizacije
- 
-STA MOZES DA GUGLAS (sintaksa):
-- Tacni argumenti TF.rotate(), TF.hflip()
-- random.uniform() opseg
-=======================================================================
+
 """
  
 import json
@@ -38,11 +27,8 @@ IMAGENET_STD = [0.229, 0.224, 0.225]
 class InbreastMassDataset(Dataset):
     def __init__(self, split_json_path, split_name, img_size=IMG_SIZE, augment=None):
         """
-        augment=None (podrazumevano) -> automatski UKLJUCENO za "train",
-        automatski ISKLJUCENO za "val"/"test". Mozes eksplicitno da
-        prosledis True/False da to prepises, ali podrazumevano ponasanje
-        je namerno bezbedno (ne mozes slucajno da "zaboravis" da iskljucis
-        augmentaciju na validaciji).
+        augment=None-> automatski UKLJUCENO za "train",
+        automatski ISKLJUCENO za "val"/"test"
         """
         with open(split_json_path) as f:
             records = json.load(f)
@@ -74,10 +60,7 @@ class InbreastMassDataset(Dataset):
         return mask
  
     def _augment(self, image_t, mask_t):
-        """Primenjuje NASUMICNE transformacije - ali ISTE na sliku i masku
-        gde god je to geometrijska transformacija (flip, rotacija).
-        Brightness/contrast jitter ide SAMO na sliku (menjati "svetlinu"
-        binarne maske nema smisla - ona mora ostati strogo 0/1)."""
+        
  
         # 1) Horizontalni flip, 50% sanse
         if random.random() < 0.5:

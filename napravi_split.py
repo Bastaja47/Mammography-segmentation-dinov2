@@ -2,13 +2,8 @@
 napravi_split.py
 
 Deli 107 slika sa Mass maskama na train/val/test, GRUPISANO PO PACIJENTU
-(ne po pojedinacnoj slici), da izbegnemo curenje podataka (data leakage).
+(ne po pojedinacnoj slici), da izbegnemo curenje podataka (data leakage)
 
-Rezultat cuvamo u JSON fajl - Dataset klasa (sledeci korak) ce ga samo citati,
-umesto da split racuna iznova svaki put. Ovo garantuje da SVAKI eksperiment
-koji uradimo (baseline, razlicite adaptacije) koristi IDENTICAN split -
-inace bismo poredili rezultate na razlicitim test skupovima, sto bi ucinilo
-poredjenje besmislenim.
 """
 
 import os
@@ -49,8 +44,8 @@ def build_dicom_index():
     """Vraca recnik: {id_slike: {path, patient_hash, laterality, view}}.
 
     Za razliku od ranije skripte (gde smo cuvali samo putanju), ovde cuvamo
-    CEO mali paket informacija po slici - jer nam dalje u kodu treba i
-    patient_hash, ne samo putanja do fajla.
+    ceo mali paket informacija po slici - jer nam dalje u kodu treba i
+    patient_hash, ne samo putanja do fajla
     """
     index = {}
     for fname in os.listdir(DICOM_DIR):

@@ -1,27 +1,11 @@
 """
 model.py
 
-Segmentacioni model - PROSIREN da podrzi delimican fine-tuning: umesto
+Segmentacioni model - prosiren da podrzi delimican fine-tuning: umesto
 "sve ili nista", moze da se odmrzne poslednjih N transformer blokova
 backbone-a, dok ostatak (patch embedding, rani blokovi) ostaje zamrznut.
 
-=======================================================================
-STA MORAS DA RAZUMES:
-- Razlika izmedju requires_grad=False (ne racunaj gradijent ZA OVAJ
-  parametar) i torch.no_grad() (ne prati NISTA u ovom bloku koda) -
-  i zasto MORAMO da uklonimo no_grad() kad je nesto odmrznuto
-  (objasnjeno u komentarima ispod, procitaj pazljivo)
-- Zasto cuvamo CEO model.state_dict() sada, ne samo head (backbone se
-  vise MOZE promeniti kad je delimicno odmrznut)
-- Zasto odmrzavamo bas POSLEDNJE blokove, ne prve (rani slojevi uce
-  generalne obrasce - ivice, teksture; kasniji slojevi uce apstraktnije,
-  zadatku-specificnije obrasce - njih ima vise smisla prilagoditi
-  mamografiji, dok rani "univerzalni" detektori ivica ostaju korisni
-  bez obzira na domen)
 
-STA MOZES DA GUGLAS:
-- Tacna sintaksa nn.ModuleList indeksiranja (self.backbone.blocks[-N:])
-=======================================================================
 """
 
 import torch
@@ -34,7 +18,7 @@ PATCH_SIZE = 14  # sve dinov2_*14 varijante koriste patch 14x14
 class DinoSegmentationModel(nn.Module):
     def __init__(self, backbone_name="dinov2_vits14", n_unfrozen_blocks=0):
         """
-        n_unfrozen_blocks=0  -> PUNO zamrznut backbone (isto kao baseline/
+        n_unfrozen_blocks=0  -> puno zamrznut backbone (isto kao baseline/
                                   augmentacija eksperimenti do sad)
         n_unfrozen_blocks=N  -> poslednjih N transformer blokova (+ finalni
                                   norm sloj) je TRENABILNO, ostatak zamrznut
@@ -67,13 +51,9 @@ class DinoSegmentationModel(nn.Module):
         self.head = nn.Conv2d(embed_dim, 1, kernel_size=1)  #Pretvara izlaz iz backbone u masku za segmentaciju (broj ulaznih kanala, broj izlaznih kanala, velicina filtera)
 
     def train(self, mode=True):
-        """Kad je backbone POTPUNO zamrznut, prisilno ga drzimo u eval()
-        modu (kao i ranije - bezbednosna mera). Kad je DELIMICNO odmrznut,
-        puštamo standardno train()/eval() ponasanje na CELOM modelu -
-        DINOv2 checkpoint-i koje koristimo imaju drop_path_rate=0 (videli
-        smo to u Tabeli 16 papira za distilovane modele), pa train/eval
-        razlika ovde realno ne menja ponasanje slojeva, samo je
-        semanticki ispravnije da model bude u "pravom" modu."""
+        """Kad je backbone potpuno zamrznut, prisilno ga drzimo u eval()
+        modu (kao i ranije - bezbednosna mera). Kad je delimicnoa odmrznut,
+        puštamo standardno train()/eval() ponasanje na celom modelu"""
         super().train(mode)
         if self.fully_frozen:
             self.backbone.eval()

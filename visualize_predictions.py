@@ -1,23 +1,9 @@
 """
 visualize_predictions.py
 
-Vizuelizacija predikcija pobednickog modela (fine-tuning N=6) na TEST
+Vizuelizacija predikcija pobednickog modela (fine-tuning N=6) na test
 skupu - za slike u finalnom izvestaju.
 
-=======================================================================
-STA MORAS DA RAZUMES:
-- Zasto biramo seed NAJBLIZI PROSEKU (789: 0.7851 ~ 0.7813), ne najbolji
-  (123: 0.7885) - biranje "najlepseg" seed-a za vizuelizaciju bi bio
-  cherry-picking, isti problem kao biranje najboljeg seed-a za sam
-  finalni broj u evaluate.py
-- Zasto prikazujemo i NAJGORI primer, ne samo najbolje - posten prikaz
-  ukljucuje i nacine na koje model GRESI
-- Denormalizacija (isto sto u test_dataset.py) - mreza vidi normalizovane
-  vrednosti, nase oci trebaju originalne
-
-STA MOZES DA GUGLAS:
-- matplotlib contour() argumenti, sortiranje liste recnika po kljucu
-=======================================================================
 """
 
 import torch

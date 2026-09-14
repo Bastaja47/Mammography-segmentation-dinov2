@@ -1,27 +1,11 @@
 """
 run_multi_seed.py
 
-Orkestrira VISE treninga: za svaku konfiguraciju (baseline, augmentacija...),
+Orkestrira vise treninga: za svaku konfiguraciju (baseline, augmentacija...),
 trenira sa 3 razlicita seed-a, pa racuna prosek +- std - da poredjenje
-bude STATISTICKI POUZDANO, ne slucajno.
+bude statisticki pouzdano, ne slucajno
 
-Podsetnik ZASTO nam ovo treba: dva ISTA baseline treninga (razlicit seed)
-dala su val Dice 0.4748 i 0.5026 - razlika 0.0278, VECA od "poboljsanja"
-koje smo pogresno pripisali augmentaciji (0.0103) na osnovu SAMO jednog
-pokretanja svake konfiguracije.
 
-=======================================================================
-STA MORAS DA RAZUMES:
-- Zasto vise seed-ova po konfiguraciji (upravo objasnjeno gore)
-- Sta prosek/std govore: mala std = pouzdan, ponovljiv rezultat;
-  velika std = rezultat je uglavnom "sum", ne treba mu previse verovati
-- Kako citati finalnu tabelu da odlucis da li je razlika izmedju dve
-  konfiguracije STVARNA (npr. razlika proseka > zbir std-ova) ili sum
-
-STA MOZES DA GUGLAS:
-- collections.defaultdict sintaksa
-- numpy .mean()/.std()
-=======================================================================
 """
 
 import csv

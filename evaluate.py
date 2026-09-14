@@ -1,23 +1,11 @@
 """
 evaluate.py
 
-FINALNA evaluacija - test skup se dodiruje OVDE, PRVI I JEDINI put u
+finalna evaluacija - test skup se dodiruje ovde, prvi i jedini put u
 celom projektu. Evaluiramo pobednicku konfiguraciju iz Faze 5
-(fine-tuning N=6 blokova + augmentacija) - sva TRI vec istrenirana
+(fine-tuning N=6 blokova + augmentacija) - sva tri vec istrenirana
 modela (razliciti seed), izvestavamo prosek +- std.
 
-=======================================================================
-STA MORAS DA RAZUMES:
-- Zasto NE biramo "najbolji od 3 seed-a" gledajuci test rezultate -
-  to bi bilo odlucivanje NA OSNOVU test skupa, sto ga kontaminira kao
-  nezavisnu, objektivnu proveru
-- Zasto ceo test skup ide u JEDAN batch (vidi komentar dole)
-- Sensitivity vs Precision - klinicki, sensitivity (ne propustiti masu)
-  je obicno vazniji od precision-a (povremeni lazni alarm)
-
-STA MOZES DA GUGLAS:
-- torch.load() / load_state_dict() tacna sintaksa i map_location
-=======================================================================
 """
 
 import csv
@@ -42,7 +30,7 @@ def main():
     print(f"Koristim uredjaj: {device}")
 
     test_ds = InbreastMassDataset(SPLIT_JSON, "test")
-    print(f"Test skup: {len(test_ds)} slika — dodirujemo ga OVDE, prvi i jedini put u projektu.")
+    print(f"Test skup: {len(test_ds)} slika")
 
     # BATCH_SIZE (64) veci od celog test skupa (17 slika) - SVE test
     # slike idu u JEDAN batch. Zasto: ako bismo ih delili u vise

@@ -1,20 +1,9 @@
 """
 train.py
 
-Trening logika - PROSIRENA da podrzi delimican fine-tuning backbone-a
+Trening logika - prosirena da podrzi delimican fine-tuning backbone-a
 (pored postojece podrske za augmentaciju i multi-seed pozive).
 
-=======================================================================
-STA MORAS DA RAZUMES:
-- Zasto DVE grupe parametara u optimizatoru, sa RAZLICITIM learning
-  rate-ovima (head = "hrabar" LR, odmrznuti backbone blokovi = mnogo
-  manji LR - da se ne "zaboravi" pretrenirano znanje)
-- Zasto sada cuvamo CEO model.state_dict(), ne samo head (objasnjeno
-  u model.py komentarima - backbone vise NIJE nuzno nepromenjen)
-
-STA MOZES DA GUGLAS:
-- torch.optim.AdamW dokumentacija za param_groups sintaksu
-=======================================================================
 """
 
 import csv
