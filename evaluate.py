@@ -1,9 +1,9 @@
 """
 Finalna evaluacija na test skupu (pokrece se tek kad je konfiguracija izabrana
-na osnovu validacionog skupa).
+na osnovu validacionog skupa)
 
 Evaluiraju se sva tri istrenirana modela (po jedan za svaki seed), a ne samo
-najbolji, da ne bismo birali model na osnovu test rezultata.
+najbolji, da ne bismo birali model na osnovu test rezultata
 """
 
 import csv
@@ -30,8 +30,8 @@ def main():
     test_ds = InbreastMassDataset(SPLIT_JSON, "test")
     print(f"Test skup: {len(test_ds)} slika")
 
-    # Ceo test skup ide u JEDAN batch (17 slika). Tako je prosek metrika po slikama
-    # tacan i ne zavisi od toga kako se skup podeli na batch-eve razlicite velicine.
+    # Ceo test skup ide u1 batch (17 slika). Tako je prosek metrika po slikama
+    # tacan i ne zavisi od toga kako se skup podeli na batch-eve razlicite velicine
     test_loader = DataLoader(test_ds, batch_size=len(test_ds), shuffle=False)
 
     all_results = []
