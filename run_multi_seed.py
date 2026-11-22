@@ -1,8 +1,8 @@
 """
-Pokrece svaku konfiguraciju sa vise seed-ova i racuna prosek +- std val Dice-a.
+Pokrece svaku konfiguraciju sa vise seed-ova i racuna prosek +- std val Dice-a
 
 Jedan run na ovako malom skupu (13 val slika) ima veliku varijansu, pa se
-svaka konfiguracija trenira sa 3 seed-a i poredi se prosek, a ne pojedinacni broj.
+svaka konfiguracija trenira sa 3 seed-a i poredi se prosek, a ne pojedinacni broj
 """
 
 import csv
@@ -15,8 +15,8 @@ from train import train_one_run
 
 SEEDS = [123, 456, 789]
 
-# Sve konfiguracije iz eksperimenta. Imena odgovaraju logovima u results/logs/.
-# Za pokretanje samo dela eksperimenta ostavi samo zeljene stavke u listi.
+# Sve konfiguracije iz eksperimenta. Imena odgovaraju logovima u results/logs/
+# Za pokretanje samo dela eksperimenta ostavi samo zeljene stavke u listi
 CONFIGS = [
     {"experiment_name": "faza1_baseline", "augment": False, "n_unfrozen_blocks": 0},
     {"experiment_name": "faza5_augmentacija", "augment": True, "n_unfrozen_blocks": 0},
