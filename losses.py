@@ -1,9 +1,9 @@
 """
-Loss funkcija (BCE + Dice) i metrike za segmentaciju (Dice, IoU, Sensitivity, Precision).
+Loss funkcija (BCE + Dice) i metrike za segmentaciju (Dice, IoU, Sensitivity, Precision)
 
-Sve metrike se racunaju po slici, pa se usrednjavaju preko batch-a.
+Sve metrike se racunaju po slici, pa se usrednjavaju preko batch-a
 Metrike sa prefiksom "hard_" koriste prag 0.5 na verovatnoci (binarna predikcija),
-a "soft_dice_score" radi direktno nad verovatnocama pa se moze koristiti u lossu.
+a "soft_dice_score" radi direktno nad verovatnocama pa se moze koristiti u lossu
 """
 
 import torch
@@ -12,10 +12,12 @@ import torch.nn as nn
 
 class BCEDiceLoss(nn.Module):
     """
-    Kombinacija BCE (greska po pikselu) i Dice lossa (preklapanje maski).
+    Kombinacija BCE (greska po pikselu) i Dice lossa (preklapanje maski)
 
-    Mase zauzimaju mali deo slike, pa sam BCE bi favorizovao "sve je pozadina".
-    Dice kaznjava slabo preklapanje, pa zajedno daju stabilniji trening.
+
+
+    Mase zauzimaju mali deo slike, pa sam BCE bi favorizovao kao da je sve pozadina
+    Dice kaznjava slabo preklapanje, pa zajedno daju stabilniji trening
     """
 
     def __init__(self, bce_weight=0.5):
@@ -33,7 +35,7 @@ class BCEDiceLoss(nn.Module):
 
 
 def soft_dice_score(probs, targets, eps=1e-6):
-    """Dice nad verovatnocama (diferencijabilan), srednja vrednost po slikama u batch-u."""
+    """Dice nad verovatnocama (diferencijabilan), srednja vrednost po slikama u batchu"""
     probs = probs.reshape(probs.shape[0], -1)
     targets = targets.reshape(targets.shape[0], -1)
 
@@ -46,7 +48,7 @@ def soft_dice_score(probs, targets, eps=1e-6):
 
 @torch.no_grad()
 def hard_dice_score(logits, targets, threshold=0.5, eps=1e-6):
-    """Dice nad binarnom predikcijom (verovatnoca > prag)."""
+    """Dice nad binarnom predikcijom (verovatnoca > prag)"""
     probs = torch.sigmoid(logits)
     preds = (probs > threshold).float()
 
@@ -62,7 +64,7 @@ def hard_dice_score(logits, targets, threshold=0.5, eps=1e-6):
 
 @torch.no_grad()
 def hard_iou_score(logits, targets, threshold=0.5, eps=1e-6):
-    """IoU (Jaccard): preklapanje / unija predikcije i prave maske."""
+    """IoU (Jaccard): preklapanje /unija predikcije i prave maske"""
     probs = torch.sigmoid(logits)
     preds = (probs > threshold).float()
 
@@ -78,7 +80,7 @@ def hard_iou_score(logits, targets, threshold=0.5, eps=1e-6):
 
 @torch.no_grad()
 def hard_sensitivity_score(logits, targets, threshold=0.5, eps=1e-6):
-    """Sensitivity (recall): koji deo prave mase je model pokrio."""
+    """Sensitivity (recall): koji deo prave mase je model pokrio"""
     probs = torch.sigmoid(logits)
     preds = (probs > threshold).float()
 
@@ -94,7 +96,7 @@ def hard_sensitivity_score(logits, targets, threshold=0.5, eps=1e-6):
 
 @torch.no_grad()
 def hard_precision_score(logits, targets, threshold=0.5, eps=1e-6):
-    """Precision: koji deo predvidjene mase stvarno pripada pravoj masi."""
+    """Precision: koji deo predvidjene mase stvarno pripada pravoj masi"""
     probs = torch.sigmoid(logits)
     preds = (probs > threshold).float()
 
