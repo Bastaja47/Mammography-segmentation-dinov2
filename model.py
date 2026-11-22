@@ -1,15 +1,15 @@
 """
-Segmentacioni model: DINOv2 backbone + 1x1 konvoluciona glava (head).
+Segmentacioni model: DINOv2 backbone + 1x1 konvoluciona glava (head)
 
 Backbone je ili potpuno zamrznut (n_unfrozen_blocks=0), ili se odmrzava
-poslednjih N transformer blokova (fine-tuning). Glava se uvek trenira.
+poslednjih N transformer blokova (fine-tuning). Glava se uvek trenira
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# ViT-S/14 deli sliku na patch-eve 14x14 piksela
+# ViT-S/14 deli sliku na patch-eve 14x14 piksela!
 PATCH_SIZE = 14
 
 
@@ -24,13 +24,13 @@ class DinoSegmentationModel(nn.Module):
         self.n_unfrozen_blocks = n_unfrozen_blocks
         self.fully_frozen = (n_unfrozen_blocks == 0)
 
-        # 1) Zamrzni sve parametre backbone-a
+        # 1) Zamrzavanje svih parametara backbonea
         for p in self.backbone.parameters():
             p.requires_grad = False
 
-        # 2) Odmrzni samo poslednjih N blokova (i zavrsni LayerNorm).
+        # 2) Odmrznavanjeo poslednjih N blokova (i zavrsni LayerNorm)
         #    Rani slojevi uce opste obrasce (ivice, teksture) pa ih ne diramo,
-        #    a poslednji su specificniji za domen i njih prilagodjavamo.
+        #    a poslednji su specificniji za domen i njih prilagodjavamo
         if n_unfrozen_blocks > 0:
             for block in self.backbone.blocks[-n_unfrozen_blocks:]:
                 for p in block.parameters():
@@ -65,7 +65,7 @@ class DinoSegmentationModel(nn.Module):
         w = W // PATCH_SIZE
         patch_grid = patch_tokens.reshape(B, h, w, -1).permute(0, 3, 1, 2)
 
-        # Predikcija po patch-u, pa bilinearno povecanje na punu rezoluciju slike
+        # Predikcija po patchu, pa bilinearno povecanje na punu rezoluciju slike
         logits_small = self.head(patch_grid)
         logits_full = F.interpolate(
             logits_small, size=(H, W), mode="bilinear", align_corners=False
