@@ -1,5 +1,5 @@
 """
-Provera da su gotove maske masa ispravno poravnate sa DICOM slikama.
+Provera da su gotove maske masa ispravno poravnate sa DICOM slikama
 
 Za svaki par (slika, maska) proveravamo:
   - da su dimenzije iste i da maska nije prazna,
@@ -20,7 +20,7 @@ from config import DICOM_DIR, FIGURES_DIR, MASK_DIR
 
 
 def build_index(folder, pattern, ext):
-    """Mapira id slike -> putanja fajla, za fajlove sa datom ekstenzijom."""
+    """Mapira id slike -> putanja fajla, za fajlove sa datom ekstenzijom"""
     index = {}
     for fname in os.listdir(folder):
         if not fname.lower().endswith(ext):
@@ -37,7 +37,7 @@ def load_mask_bool(path):
 
 
 def check_pair(dcm_path, mask_path):
-    """Kvantitativna provera jednog para slika/maska."""
+    """Kvantitativna provera jednog para slika/maska"""
     ds = pydicom.dcmread(dcm_path)
     image = ds.pixel_array.astype(np.float32)
     mask = load_mask_bool(mask_path)
@@ -50,7 +50,7 @@ def check_pair(dcm_path, mask_path):
 
     inside_mean = float(image[mask].mean())
 
-    # "Prsten" = maska prosirena za 15 piksela, bez same maske (tkivo oko mase)
+    # Prsten maska prosirena za 15 piksela, bez same maske (tkivo oko mase)
     dilated = ndimage.binary_dilation(mask, iterations=15)
     ring = dilated & (~mask)
     ring_mean = float(image[ring].mean()) if ring.sum() > 0 else float("nan")
@@ -85,7 +85,7 @@ def main():
             suspicious.append((img_id, res["reason"]))
             continue
 
-        # Sumnjivo: maska na pozadini, ili unutrasnjost tamnija od okoline
+        # Smaska na pozadini, ili unutrasnjost tamnija od okoline
         if res["background_frac"] > 0.15 or res["inside_mean"] <= res["ring_mean"]:
             suspicious.append((
                 img_id,
