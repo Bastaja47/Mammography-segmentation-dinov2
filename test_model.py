@@ -1,6 +1,6 @@
 """
 Sanity-check za arhitekturu modela (potpuno zamrznut backbone): koji delovi se
-treniraju, koliko ima parametara i da li se oblik izlaza poklapa sa maskom.
+treniraju, koliko ima parametara i da li se oblik izlaza poklapa sa maskom
 """
 
 import torch
