@@ -1,10 +1,10 @@
 """
-Deli INBreast slike (one koje imaju masku mase) na train/val/test.
+Deli INBreast slike (one koje imaju masku mase) na train/val/test
 
-Podela je po PACIJENTU, a ne po slici: isti pacijent ima u proseku ~2 slike,
+Podela je po pacijentu, a ne po slici: isti pacijent ima u proseku ~2 slike,
 pa bi podela po slici mogla da stavi jednu u train a drugu u test (curenje
 podataka, lazno dobar rezultat). Pacijenta prepoznajemo po hash delu imena
-DICOM fajla, jer je kolona 'Patient ID' u originalnom CSV-u uklonjena.
+DICOM fajla, jer je kolona 'Patient ID' u originalnom CSV-u uklonjena
 
 Rezultat je inbreast_split.json sa putanjama relativnim u odnosu na INBREAST_ROOT.
 """
@@ -26,7 +26,7 @@ FILENAME_RE = re.compile(r"^(\d+)_([0-9a-fA-F]+)_MG_([LR])_(\w+)_ANON\.dcm$")
 
 
 def build_dicom_index():
-    """Mapira id slike -> relativna putanja i metapodaci iz imena fajla."""
+    """Mapira id slike -> relativna putanja i metapodaci iz imena fajla"""
     index = {}
     for fname in os.listdir(DICOM_DIR):
         m = FILENAME_RE.match(fname)
@@ -43,7 +43,7 @@ def build_dicom_index():
 
 
 def build_mask_index():
-    """Mapira id slike -> relativna putanja do maske mase."""
+    """Mapira id slike -> relativna putanja do maske mase"""
     index = {}
     for fname in os.listdir(MASK_DIR):
         m = re.match(r"(\d+)_mask", fname)
