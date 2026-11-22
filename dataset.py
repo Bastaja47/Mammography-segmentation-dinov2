@@ -1,7 +1,7 @@
 """
-Dataset klasa za INBreast mamograme i maske masa.
+Dataset klasa za INBreast mamograme i maske masa
 
-Ucitava DICOM sliku i PNG masku, svodi ih na 518x518 (518 = 14 x 37, tj. deljivo
+Ucitava DICOM sliku i PNG masku, svodi ih na 518x518 (518 = 14 x 37, tj deljivo
 sa velicinom patch-a DINOv2 modela), normalizuje i, samo za train skup,
 nasumicno augmentira.
 """
@@ -29,8 +29,8 @@ class InbreastMassDataset(Dataset):
     """
     Vraca recnik {"image": (3, 518, 518), "mask": (1, 518, 518), "id": str}.
 
-    split_name je "train", "val" ili "test". Augmentacija je podrazumevano
-    ukljucena samo za "train", a moze se forsirati parametrom augment.
+    split_name je "tran", "val" ili "test". Augmentacija je podrazumevano
+    ukljucena samo za "train", a moze se forsirati parametrom augment
     """
 
     def __init__(self, split_json_path, split_name, img_size=IMG_SIZE, augment=None):
@@ -66,13 +66,13 @@ class InbreastMassDataset(Dataset):
         return mask
 
     def _augment(self, image_t, mask_t):
-        # Svaka transformacija se primenjuje na sliku I na masku, da ostanu poravnate
+        # Svaka transformacija se primenjuje na sliku  na masku, da ostanu poravnate
 
         if random.random() < 0.5:
             image_t = TF.hflip(image_t)
             mask_t = TF.hflip(mask_t)
 
-        # Rotacija +-15 stepeni. Maska ide sa NEAREST interpolacijom da ostane 0/1
+        # Rotacija +-15 stepeni. Maska ide sa nearest interpolacijom da ostane 0/1
         angle = random.uniform(-15, 15)
         image_t = TF.rotate(
             image_t, angle, interpolation=TF.InterpolationMode.BILINEAR, fill=0.0
@@ -91,14 +91,14 @@ class InbreastMassDataset(Dataset):
     def __getitem__(self, idx):
         rec = self.records[idx]
 
-        # Putanje u JSON-u su relativne u odnosu na INBREAST_ROOT (vidi config.py)
+        # Putanje u json-u su relativne u odnosu na inbreast_root (config.py)
         image = self._load_image(INBREAST_ROOT / rec["dicom_path"])
         mask = self._load_mask(INBREAST_ROOT / rec["mask_path"])
 
         image_t = torch.from_numpy(image).unsqueeze(0)
         mask_t = torch.from_numpy(mask).unsqueeze(0)
 
-        # BILINEAR za sliku, NEAREST za masku: bilinear bi "zamutio" ostre 0/1 granice
+        # bilinerar za sliku, nearest za masku: bilinear bi "zamutio" ostre 0/1 granice
         image_t = TF.resize(
             image_t, [self.img_size, self.img_size],
             interpolation=TF.InterpolationMode.BILINEAR,
@@ -111,7 +111,7 @@ class InbreastMassDataset(Dataset):
         if self.augment:
             image_t, mask_t = self._augment(image_t, mask_t)
 
-        # DINOv2 ocekuje RGB, a mamogram je jedan kanal pa ga ponovimo 3 puta
+        # DINOv2 ocekuje rgb a mamogram je jedan kanal pa ga ponovimo 3 puta
         image_t = image_t.repeat(3, 1, 1)
         image_t = TF.normalize(image_t, mean=IMAGENET_MEAN, std=IMAGENET_STD)
 
