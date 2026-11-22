@@ -1,3 +1,10 @@
+"""
+Finalna evaluacija na test skupu (pokrece se tek kad je konfiguracija izabrana
+na osnovu validacionog skupa).
+
+Evaluiraju se sva tri istrenirana modela (po jedan za svaki seed), a ne samo
+najbolji, da ne bismo birali model na osnovu test rezultata.
+"""
 
 import csv
 
@@ -5,15 +12,16 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
+from config import CHECKPOINT_DIR, SPLIT_JSON, SUMMARY_DIR
 from dataset import InbreastMassDataset
 from model import DinoSegmentationModel
 from losses import hard_dice_score, hard_iou_score, hard_sensitivity_score, hard_precision_score
 
-SPLIT_JSON = "inbreast_split.json"
 BACKBONE_NAME = "dinov2_vits14"
 N_UNFROZEN_BLOCKS = 6
 SEEDS = [123, 456, 789]
 CHECKPOINT_TEMPLATE = "faza5_finetune_6blocks_seed{seed}_model.pt"
+
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -22,12 +30,14 @@ def main():
     test_ds = InbreastMassDataset(SPLIT_JSON, "test")
     print(f"Test skup: {len(test_ds)} slika")
 
-    test_loader = DataLoader(test_ds, batch_size=64, shuffle=False)
+    # Ceo test skup ide u JEDAN batch (17 slika). Tako je prosek metrika po slikama
+    # tacan i ne zavisi od toga kako se skup podeli na batch-eve razlicite velicine.
+    test_loader = DataLoader(test_ds, batch_size=len(test_ds), shuffle=False)
 
     all_results = []
 
     for seed in SEEDS:
-        checkpoint_path = CHECKPOINT_TEMPLATE.format(seed=seed)
+        checkpoint_path = CHECKPOINT_DIR / CHECKPOINT_TEMPLATE.format(seed=seed)
         print(f"\nUcitavam: {checkpoint_path}")
 
         model = DinoSegmentationModel(backbone_name=BACKBONE_NAME, n_unfrozen_blocks=N_UNFROZEN_BLOCKS)
@@ -62,13 +72,16 @@ def main():
         values = np.array([r[metric_name] for r in all_results])
         print(f"{metric_name:12s}: {values.mean():.4f} +/- {values.std():.4f}")
 
-    with open("final_test_evaluation.csv", "w", newline="") as f:
+    SUMMARY_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = SUMMARY_DIR / "final_test_evaluation.csv"
+    with open(out_path, "w", newline="") as f:
         fieldnames = ["seed", "dice", "iou", "sensitivity", "precision"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for r in all_results:
             writer.writerow({k: r[k] for k in fieldnames})
-    print("\nSacuvano: final_test_evaluation.csv")
+    print(f"\nSacuvano: {out_path}")
+
 
 if __name__ == "__main__":
     main()

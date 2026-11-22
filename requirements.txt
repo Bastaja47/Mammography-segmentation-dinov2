@@ -1,0 +1,9 @@
+# PyTorch instaliraj posebno, u skladu sa svojom CUDA verzijom (vidi README):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+torch>=2.0
+torchvision>=0.15
+numpy
+scipy
+pillow
+pydicom
+matplotlib

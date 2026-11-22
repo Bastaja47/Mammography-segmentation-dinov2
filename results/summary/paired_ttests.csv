@@ -1,0 +1,5 @@
+comparison,mean_diff_dice,p_paired_ttest,seeds_improved,p_sign_test_one_sided
+faza5_augmentacija vs faza1_baseline,0.017380664745966595,0.1657527027798358,3/3,0.125
+faza5_finetune_2blocks vs faza5_augmentacija,0.03634608288606008,0.043565691607211285,3/3,0.125
+faza5_finetune_4blocks vs faza5_finetune_2blocks,0.023582617441813152,0.021058921610105093,3/3,0.125
+faza5_finetune_6blocks vs faza5_finetune_4blocks,0.0941101461648941,0.017418835571171833,3/3,0.125

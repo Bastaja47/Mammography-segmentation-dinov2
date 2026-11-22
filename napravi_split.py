@@ -1,21 +1,32 @@
+"""
+Deli INBreast slike (one koje imaju masku mase) na train/val/test.
+
+Podela je po PACIJENTU, a ne po slici: isti pacijent ima u proseku ~2 slike,
+pa bi podela po slici mogla da stavi jednu u train a drugu u test (curenje
+podataka, lazno dobar rezultat). Pacijenta prepoznajemo po hash delu imena
+DICOM fajla, jer je kolona 'Patient ID' u originalnom CSV-u uklonjena.
+
+Rezultat je inbreast_split.json sa putanjama relativnim u odnosu na INBREAST_ROOT.
+"""
 
 import os
 import re
 import json
 import random
 
-ROOT = r"C:\Users\XYZ\Desktop\Principi dubokog ucenja\Projekat\INBreast\INBreast"
-
-DICOM_DIR = os.path.join(ROOT, "AllDICOMs")
-MASK_DIR = os.path.join(ROOT, "extras", "MassSegmentationMasks")
+from config import DICOM_DIR, MASK_DIR, SPLIT_JSON
 
 SEED = 42
 TRAIN_FRAC = 0.70
 VAL_FRAC = 0.15
 
+# Primer imena: 20586908_6c613a14b80a8591_MG_R_CC_ANON.dcm
+# -> id slike, hash pacijenta, strana (L/R), projekcija (CC/MLO)
 FILENAME_RE = re.compile(r"^(\d+)_([0-9a-fA-F]+)_MG_([LR])_(\w+)_ANON\.dcm$")
 
+
 def build_dicom_index():
+    """Mapira id slike -> relativna putanja i metapodaci iz imena fajla."""
     index = {}
     for fname in os.listdir(DICOM_DIR):
         m = FILENAME_RE.match(fname)
@@ -23,20 +34,23 @@ def build_dicom_index():
             continue
         img_id, patient_hash, lat, view = m.groups()
         index[img_id] = {
-            "path": os.path.join(DICOM_DIR, fname),
+            "path": f"AllDICOMs/{fname}",
             "patient_hash": patient_hash,
             "laterality": lat,
             "view": view,
         }
     return index
 
+
 def build_mask_index():
+    """Mapira id slike -> relativna putanja do maske mase."""
     index = {}
     for fname in os.listdir(MASK_DIR):
         m = re.match(r"(\d+)_mask", fname)
         if m:
-            index[m.group(1)] = os.path.join(MASK_DIR, fname)
+            index[m.group(1)] = f"extras/MassSegmentationMasks/{fname}"
     return index
+
 
 def main():
     all_dcm = [f for f in os.listdir(DICOM_DIR) if f.lower().endswith(".dcm")]
@@ -46,10 +60,12 @@ def main():
     if len(dicom_index) < len(all_dcm):
         print("!! Neki fajlovi se ne poklapaju sa ocekivanim formatom imena - proveri ih.")
 
+    # Ciljni skup: samo slike koje imaju i DICOM i masku mase
     mask_index = build_mask_index()
     common_ids = sorted(set(dicom_index) & set(mask_index))
     print(f"\nSlika sa maskom (nas ciljni skup za segmentaciju): {len(common_ids)}")
 
+    # Grupisanje slika po pacijentu
     groups = {}
     for img_id in common_ids:
         ph = dicom_index[img_id]["patient_hash"]
@@ -59,6 +75,7 @@ def main():
     print(f"Broj razlicitih pacijenata/pregleda: {len(patient_hashes)}")
     print(f"Prosecno slika po pacijentu: {len(common_ids) / len(patient_hashes):.2f}")
 
+    # Mesamo PACIJENTE (fiksan seed = ponovljiva podela), pa ih delimo 70/15/15
     rng = random.Random(SEED)
     rng.shuffle(patient_hashes)
 
@@ -98,10 +115,10 @@ def main():
                 "view": dicom_index[img_id]["view"],
             })
 
-    out_path = "inbreast_split.json"
-    with open(out_path, "w") as f:
+    with open(SPLIT_JSON, "w") as f:
         json.dump(records, f, indent=2)
-    print(f"\nSacuvano: {out_path} ({len(records)} zapisa)")
+    print(f"\nSacuvano: {SPLIT_JSON} ({len(records)} zapisa)")
+
 
 if __name__ == "__main__":
     main()

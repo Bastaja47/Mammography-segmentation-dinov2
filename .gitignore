@@ -1,13 +1,19 @@
-# Sirovi INBreast podaci - OGROMNI fajlovi, Git nije napravljen za ovo
+# INBreast baza (sirovi podaci se ne objavljuju u repozitorijumu)
 INBreast/
 
-# Istrenirani checkpoint-i - veliki su (desetine MB svaki), imamo ih mnogo
+# Istrenirani modeli: veliki su (~86 MB svaki)
 *.pt
+checkpoints/
 
-# Python "cache" fajlovi - automatski generisani, nepotrebni za pracenje
+# Pomocne slike generisane iz mamograma (ne objavljuju se)
+results/figures/provera_bbox_zoom.png
+results/figures/test_dataset_output.png
+
+# Python cache
 __pycache__/
 *.pyc
 
-New folder/
-
+# Okruzenje i editor
+venv/
+.venv/
 .vscode/

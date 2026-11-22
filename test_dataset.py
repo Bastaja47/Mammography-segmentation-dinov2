@@ -1,18 +1,24 @@
+"""
+Sanity-check za Dataset klasu: velicine skupova, oblici, opseg vrednosti i
+vizuelni preklop slike i maske nakon resize-a (potvrda da su poravnate).
+"""
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
+from config import FIGURES_DIR, SPLIT_JSON
 from dataset import IMAGENET_MEAN, IMAGENET_STD, InbreastMassDataset
 
-SPLIT_JSON = "inbreast_split.json"
 
 def denormalize_for_display(image_t):
+    """Vraca normalizovanu sliku u opseg [0, 1] da bi mogla da se prikaze."""
     mean = torch.tensor(IMAGENET_MEAN).view(3, 1, 1)
     std = torch.tensor(IMAGENET_STD).view(3, 1, 1)
     img = image_t * std + mean
     return img.clamp(0, 1).permute(1, 2, 0).numpy()
+
 
 def main():
     train_ds = InbreastMassDataset(SPLIT_JSON, "train")
@@ -28,6 +34,7 @@ def main():
     print("Oblik batch-a maski: ", batch["mask"].shape)
     print("Opseg vrednosti slike (posle normalizacije): min=%.2f max=%.2f"
           % (batch["image"].min(), batch["image"].max()))
+    # Maska mora ostati strogo binarna (samo 0 i 1) i posle resize-a/rotacije
     print("Jedinstvene vrednosti u maski:", torch.unique(batch["mask"]))
     print("ID-jevi u batch-u:", batch["id"])
 
@@ -47,8 +54,11 @@ def main():
             ax.axis("off")
 
     plt.tight_layout()
-    plt.savefig("test_dataset_output.png", dpi=130)
-    print("\nSacuvano: test_dataset_output.png")
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = FIGURES_DIR / "test_dataset_output.png"
+    plt.savefig(out_path, dpi=130)
+    print(f"\nSacuvano: {out_path}")
+
 
 if __name__ == "__main__":
     main()

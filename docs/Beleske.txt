@@ -1,7 +1,0 @@
-Provera maski preko "naduvane maske" jako pametno
-
-Data leakage sprecavamo tako sto razvrstavamo pacijente da jedna slika ne bi zavrsila u train jedna u test pa da onda model prepozna sliku i dobijemo lazno dobar rezultat.
-
-Koristim 107 slika a ne 410 (303 otpada) jer radimo segmentaciju masa, 67 slika nema nista anotirano tj nema nikakvu leziju, 236 slika imaju anotiranu leziju ali nije masa nego kalcifikacija, asimetrija...
-
-PROBLEM> Da li slike bez anotiranih masa ubacivati u test (ali onda to povlaci da neke moraju i u train)

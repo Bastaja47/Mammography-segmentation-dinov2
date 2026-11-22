@@ -1,34 +1,52 @@
+"""
+Vizuelizacija predikcija modela na test slikama.
 
+Bira se model (seed) cija je test Dice vrednost NAJBLIZA prosecnoj, a ne
+najbolji, da vizuelizacija ne bi bila "cherry-picking". Prikazuju se cetiri
+slike: najgora, dve tipicne i najbolja (po Dice-u).
+"""
+
+import csv
+
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
+from config import CHECKPOINT_DIR, FIGURES_DIR, SPLIT_JSON, SUMMARY_DIR
 from dataset import InbreastMassDataset, IMAGENET_MEAN, IMAGENET_STD
 from model import DinoSegmentationModel
 from losses import hard_dice_score
 
-SPLIT_JSON = "inbreast_split.json"
 BACKBONE_NAME = "dinov2_vits14"
 N_UNFROZEN_BLOCKS = 6
 CHECKPOINT_TEMPLATE = "faza5_finetune_6blocks_seed{seed}_model.pt"
 
-SEED_TEST_DICE = {123: 0.7885, 456: 0.7702, 789: 0.7851}
-MEAN_DICE = 0.7813
+
+def load_test_dice_per_seed():
+    """Cita test Dice po seed-u iz results/summary/final_test_evaluation.csv (izlaz evaluate.py)."""
+    with open(SUMMARY_DIR / "final_test_evaluation.csv", newline="") as f:
+        return {int(r["seed"]): float(r["dice"]) for r in csv.DictReader(f)}
+
 
 def denormalize_for_display(image_t):
+    """Vraca normalizovanu sliku u opseg [0, 1] da bi mogla da se prikaze."""
     mean = torch.tensor(IMAGENET_MEAN).view(3, 1, 1)
     std = torch.tensor(IMAGENET_STD).view(3, 1, 1)
     img = image_t * std + mean
     return img.clamp(0, 1).permute(1, 2, 0).numpy()
 
+
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    chosen_seed = min(SEED_TEST_DICE, key=lambda s: abs(SEED_TEST_DICE[s] - MEAN_DICE))
-    print(f"Koristim seed={chosen_seed} (najblizi proseku {MEAN_DICE:.4f}) - "
+    seed_test_dice = load_test_dice_per_seed()
+    mean_dice = float(np.mean(list(seed_test_dice.values())))
+    chosen_seed = min(seed_test_dice, key=lambda s: abs(seed_test_dice[s] - mean_dice))
+    print(f"Koristim seed={chosen_seed} (najblizi proseku {mean_dice:.4f}) - "
           f"NE najbolji seed, da izbegnemo cherry-picking u vizuelizaciji.")
 
-    checkpoint_path = CHECKPOINT_TEMPLATE.format(seed=chosen_seed)
+    checkpoint_path = CHECKPOINT_DIR / CHECKPOINT_TEMPLATE.format(seed=chosen_seed)
     model = DinoSegmentationModel(backbone_name=BACKBONE_NAME, n_unfrozen_blocks=N_UNFROZEN_BLOCKS)
     model.load_state_dict(torch.load(checkpoint_path, map_location=device))
     model.to(device)
@@ -37,6 +55,7 @@ def main():
     test_ds = InbreastMassDataset(SPLIT_JSON, "test")
     test_loader = DataLoader(test_ds, batch_size=1, shuffle=False)
 
+    # Predikcija za svaku test sliku, sa Dice-om po slici
     per_image_results = []
     with torch.no_grad():
         for batch in test_loader:
@@ -59,6 +78,7 @@ def main():
     for r in per_image_results:
         print(f"  ID {r['id']}: {r['dice']:.4f}")
 
+    # Najgora, dve iz sredine (tipicne) i najbolja
     selected_idx = [0, n // 3, (2 * n) // 3, n - 1]
     selected = [per_image_results[i] for i in selected_idx]
     labels = ["Najgori primer", "Tipican primer 1", "Tipican primer 2", "Najbolji primer"]
@@ -85,8 +105,11 @@ def main():
         axes[row][2].axis("off")
 
     plt.tight_layout()
-    plt.savefig("predikcije_primeri.png", dpi=150)
-    print("\nSacuvano: predikcije_primeri.png")
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = FIGURES_DIR / "predikcije_primeri.png"
+    plt.savefig(out_path, dpi=150)
+    print(f"\nSacuvano: {out_path}")
+
 
 if __name__ == "__main__":
     main()

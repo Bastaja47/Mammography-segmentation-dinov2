@@ -1,3 +1,9 @@
+"""
+Trening jedne konfiguracije (jedan seed) segmentacionog modela.
+
+Poziva se iz run_multi_seed.py za svaki seed i svaku konfiguraciju, a moze i
+direktno (`python train.py`) kao brzi test na jednom seed-u.
+"""
 
 import csv
 import random
@@ -6,18 +12,20 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
+from config import CHECKPOINT_DIR, LOGS_DIR, SPLIT_JSON
 from dataset import InbreastMassDataset
 from model import DinoSegmentationModel
 from losses import BCEDiceLoss, hard_dice_score, hard_iou_score
 
-SPLIT_JSON = "inbreast_split.json"
 BATCH_SIZE = 8
 NUM_EPOCHS = 60
-LR_HEAD = 1e-3
-LR_BACKBONE = 1e-5
-PATIENCE = 10
+LR_HEAD = 1e-3       # glava je nasumicno inicijalizovana pa sme veci learning rate
+LR_BACKBONE = 1e-5   # odmrznuti blokovi: 100x manji LR da ne "zaboravimo" pretrenirano znanje
+PATIENCE = 10        # early stopping na validacionom Dice-u
+
 
 def run_epoch(model, loader, criterion, optimizer, device, train=True):
+    """Jedna epoha nad loader-om. Vraca prosecan loss, Dice i IoU."""
     model.train(train)
     total_loss, total_dice, total_iou, n_batches = 0.0, 0.0, 0.0, 0
 
@@ -25,6 +33,7 @@ def run_epoch(model, loader, criterion, optimizer, device, train=True):
         images = batch["image"].to(device)
         masks = batch["mask"].to(device)
 
+        # Gradijenti se racunaju samo tokom treninga
         with torch.set_grad_enabled(train):
             logits = model(images)
             loss = criterion(logits, masks)
@@ -44,8 +53,16 @@ def run_epoch(model, loader, criterion, optimizer, device, train=True):
         "iou": total_iou / n_batches,
     }
 
+
 def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
                    backbone_name="dinov2_vits14"):
+    """
+    Trenira model za dati seed i konfiguraciju.
+
+    Cuva najbolji checkpoint (po val Dice-u) u checkpoints/ i log po epohama u
+    results/logs/. Vraca recnik sa najboljim rezultatima za run_multi_seed.py.
+    """
+    # Fiksiramo sve izvore slucajnosti da bi run bio ponovljiv
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -56,9 +73,12 @@ def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
           f"| n_unfrozen_blocks={n_unfrozen_blocks}")
     print(f"{'='*60}")
 
-    checkpoint_path = f"{experiment_name}_seed{seed}_model.pt"
-    log_csv_path = f"{experiment_name}_seed{seed}_log.csv"
+    CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    checkpoint_path = CHECKPOINT_DIR / f"{experiment_name}_seed{seed}_model.pt"
+    log_csv_path = LOGS_DIR / f"{experiment_name}_seed{seed}_log.csv"
 
+    # Augmentacija se ukljucuje samo za train, val ostaje neizmenjen
     train_ds = InbreastMassDataset(SPLIT_JSON, "train", augment=augment)
     val_ds = InbreastMassDataset(SPLIT_JSON, "val")
 
@@ -70,6 +90,7 @@ def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
 
     criterion = BCEDiceLoss(bce_weight=0.5)
 
+    # Dve grupe parametara sa razlicitim learning rate-om (vidi konstante gore)
     head_params = list(model.head.parameters())
     backbone_params = [p for p in model.backbone.parameters() if p.requires_grad]
 
@@ -102,6 +123,7 @@ def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
             "val_loss": val_stats["loss"], "val_dice": val_stats["dice"], "val_iou": val_stats["iou"],
         })
 
+        # Model biramo po validacionom Dice-u (test skup se ovde NE koristi)
         if val_stats["dice"] > best_val_dice:
             best_val_dice = val_stats["dice"]
             best_val_iou = val_stats["iou"]
@@ -130,8 +152,10 @@ def train_one_run(seed, experiment_name, augment, n_unfrozen_blocks=0,
         "best_val_dice": best_val_dice,
         "best_val_iou": best_val_iou,
         "best_epoch": best_epoch,
-        "checkpoint_path": checkpoint_path,
+        "checkpoint_path": str(checkpoint_path),
     }
 
+
 if __name__ == "__main__":
+    # Brzi test jedne konfiguracije (fine-tuning 2 bloka, jedan seed)
     train_one_run(seed=123, experiment_name="quick_test_finetune", augment=True, n_unfrozen_blocks=2)
