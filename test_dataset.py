@@ -1,6 +1,6 @@
 """
 Sanity-check za Dataset klasu: velicine skupova, oblici, opseg vrednosti i
-vizuelni preklop slike i maske nakon resize-a (potvrda da su poravnate).
+vizuelni preklop slike i maske nakon resize-a (potvrda da su poravnate)
 """
 
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ from dataset import IMAGENET_MEAN, IMAGENET_STD, InbreastMassDataset
 
 
 def denormalize_for_display(image_t):
-    """Vraca normalizovanu sliku u opseg [0, 1] da bi mogla da se prikaze."""
+    """Vraca normalizovanu sliku u opseg [0, 1] da bi mogla da se prikaze"""
     mean = torch.tensor(IMAGENET_MEAN).view(3, 1, 1)
     std = torch.tensor(IMAGENET_STD).view(3, 1, 1)
     img = image_t * std + mean
